@@ -1,0 +1,76 @@
+#!/usr/bin/python
+#
+############################################################
+# push_msg
+#
+# a pushetta (www.pushetta.com) python implementation for
+# sending messages to a specific channel
+#
+# Copyright (c) 2015 nimmis <kjell.havneskold@gmail.com>
+############################################################
+#
+
+from pushetta import Pushetta
+import argparse
+import ConfigParser
+import os
+import sys
+
+#
+# Load configuration file ~/.push_msg
+#
+
+Config_file = os.getenv("HOME")+'/.push_msg' 
+
+Config = ConfigParser.ConfigParser()
+Config.read(Config_file)
+if not Config.has_section('global') :
+   Config.add_section('global')
+try:
+   API_KEY = Config.get('global','API_KEY')
+except:
+   API_KEY=''
+
+
+#
+#if empty apikey, ask for it
+#
+ 
+if API_KEY == '':
+  API_KEY = raw_input( 'Please enter you Pushetta API_KEY :') 
+
+  # write it to configutation file
+
+  cfgfile = open(Config_file,'w')
+
+  Config.set('global','API_KEY',API_KEY ) 
+  Config.write(cfgfile)
+  cfgfile.close()
+
+  print "Pushetta API_KEY stored in ",Config_file
+  print "Please edit file or remove the file to be asked again to change API key"
+  exit(0)
+
+
+#
+# get arguments
+#
+
+parser = argparse.ArgumentParser(description='This is a command to send messages to a Pushetta channel')
+parser.add_argument('-c','--channel',help='Channel name',required=True)
+parser.add_argument('-m','--message',help='Message to send',required=True)
+parser.add_argument('-q','--quiet',help='Don''t echo error messages',dest='echoflag', action='store_false')
+parser.set_defaults(echoflag=True)
+args = parser.parse_args() 
+
+p=Pushetta(API_KEY)
+                
+try:
+  push_ret=p.pushMessage(args.channel, args.message)
+except:
+  if args.echoflag:
+     print "Unexpected error:", sys.exc_info()[1]
+  exit(1)
+
+exit(0)
+
